@@ -10,7 +10,8 @@ namespace BookStorage
             const string CommandAddBook = "1";
             const string CommandDeleteBook = "2";
             const string CommandShowBooks = "3";
-            const string CommandExit = "4";
+            const string CommandSearchParameters = "4";
+            const string CommandExit = "5";
 
             BookStorage bookStorage = new BookStorage();
 
@@ -22,6 +23,7 @@ namespace BookStorage
                     $"\n [{CommandAddBook}] Добавить книгу" +
                     $"\n [{CommandDeleteBook}] Удалить книгу" +
                     $"\n [{CommandShowBooks}] Показать книги" +
+                    $"\n [{CommandSearchParameters}] Поиск по параметрам" +
                     $"\n [{CommandExit}] Выход");
 
                 string userInput = Console.ReadLine();
@@ -41,6 +43,10 @@ namespace BookStorage
                         bookStorage.ShowBooks();
                         break;
 
+                    case CommandSearchParameters:
+                        bookStorage.Search();
+                        break;
+
                     case CommandExit:
                         Console.WriteLine("Программа закончила работу");
                         isWork = false;
@@ -55,16 +61,16 @@ namespace BookStorage
 
         class Book
         {
-            public string TitleBook { get; private set; }
-            public string Author { get; private set; }
-            public int YearRelease { get; private set; }
-
             public Book(string title, string autor, int yearRelease)
             {
                 TitleBook = title;
                 Author = autor;
                 YearRelease = yearRelease;
             }
+
+            public string TitleBook { get; private set; }
+            public string Author { get; private set; }
+            public int YearRelease { get; private set; }
         }
 
         class BookStorage
@@ -75,6 +81,8 @@ namespace BookStorage
             {
                 _books.Add(new Book("Unity 2018", "Майкл Гейл", 2018));
                 _books.Add(new Book("Бим Чёрное ухо", " Гавриил Троепольский", 1971));
+                _books.Add(new Book("Бойцовский клуб", "Чак Паланик", 1996));
+                _books.Add(new Book("Unity 2018", "Майкл Гейл", 2018));
                 _books.Add(new Book("Бойцовский клуб", "Чак Паланик", 1996));
             }
 
@@ -87,12 +95,15 @@ namespace BookStorage
                 int yearRelease;
 
                 Console.Write("Введите название книги: ");
-                title = CheckInputText();
+                title = Console.ReadLine();
+
                 Console.Write("Введите имя автора: ");
                 nameAuthor = CheckInputText();
+
                 Console.Write("Введите фамилию автора: ");
                 surnameAuthor = CheckInputText();
                 author = nameAuthor + " " + surnameAuthor;
+
                 Console.Write("Введите год выпуска книги: ");
                 yearRelease = CheckInputNumber();
 
@@ -109,34 +120,46 @@ namespace BookStorage
 
             public void RemoveBook()
             {
-                Console.WriteLine("Удалить книгу");
+                Console.WriteLine("Удаление ");
+                Console.Write("Введите автора: ");
+                string author = Console.ReadLine();
 
-                if (TryFindBook(out Book book))
+                bool isDeletedAuthor = false;
+
+                for (int i = 0; i < _books.Count; i++)
                 {
-                    _books.Remove(book);
+                    if (_books[i].Author == author)
+                    {
+                        Console.WriteLine($"Удалить Книгу номер : {i + 1} {_books[i].TitleBook}. Автор: {_books[i].Author}. Год выпуска: {_books[i].YearRelease}");
+                        isDeletedAuthor = true;
+                    }
                 }
+
+                if (isDeletedAuthor == true)
+                {
+                    Console.WriteLine("Введите номер кники для удаления");
+                    int.TryParse(Console.ReadLine(), out int deleteAuthor);
+
+                    if (_books[deleteAuthor - 1].Author == author)
+                    {
+                        _books.RemoveAt(deleteAuthor - 1);
+                        Console.WriteLine("Книга удалена!");
+                    }
+                    else
+                    {
+                        Console.WriteLine("Удаление не возможно");
+                    }
+                }
+                else
+                {
+                    Console.WriteLine("Автор не найден");
+                }
+
             }
 
             public void ShowBooks()
             {
-                const string CommandShowAllBooks = "1";
-                const string CommandBookSearchParameters = "2";
-
-                Console.WriteLine($"[{CommandShowAllBooks}] Показать все книги" +
-                    $"\n[{CommandBookSearchParameters}] Показать книги по параметрам");
-                string userInput = Console.ReadLine();
-
-                if (userInput == CommandShowAllBooks)
-                {
-                    ShowAllBooks();
-                }
-                else if (userInput == CommandBookSearchParameters)
-                {
-                    if (TryFindBook(out Book book))
-                    {
-                        Console.WriteLine($"Книга: {book.TitleBook}. Автор: {book.Author}. Год выпуска: {book.YearRelease}");
-                    }
-                }
+                ShowAllBooks();
             }
 
             private void ShowAllBooks()
@@ -145,79 +168,6 @@ namespace BookStorage
                 {
                     Console.WriteLine($"Книга: {book.TitleBook}. Автор: {book.Author}. Год выпуска: {book.YearRelease}");
                 }
-            }
-
-            private bool TryFindBook(out Book book)
-            {
-                const string CommandFindBookName = "1";
-                const string CommandFindBookAuthor = "2";
-                const string CommandFindYearRelease = "3";
-
-                Console.WriteLine($"[{CommandFindBookName}] Найти книгу по названию\n" +
-                                  $"[{CommandFindBookAuthor}] Найти книгу по автору\n" +
-                                  $"[{CommandFindYearRelease}] Найти книгу по году выпуска");
-
-                string userInput = Console.ReadLine();
-
-                switch (userInput)
-                {
-                    case CommandFindBookName:
-                        Console.Write("Введите название книги: ");
-                        string nameBook = Console.ReadLine();
-
-                        for (int i = 0; i < _books.Count; i++)
-                        {
-                            if (_books[i].TitleBook.ToLower() == nameBook.ToLower())
-                            {
-                                book = _books[i];
-                                return true;
-                            }
-                        }
-
-                        Message();
-                        break;
-
-                    case CommandFindBookAuthor:
-                        Console.Write("Введите имя или фамилию автора: ");
-                        string author = Console.ReadLine();
-
-                        for (int i = 0; i < _books.Count; i++)
-                        {
-                            if (author.ToLower() == _books[i].Author.ToLower())
-                            {
-                                book = _books[i];
-                                return true;
-                            }
-                        }
-
-                        Message();
-                        break;
-
-                    case CommandFindYearRelease:
-                        int yearRelease;
-
-                        Console.Write("Введите год выпуска книги: ");
-                        int.TryParse(Console.ReadLine(), out yearRelease);
-
-                        for (int i = 0; i < _books.Count; i++)
-                        {
-                            if (yearRelease == _books[i].YearRelease)
-                            {
-                                book = _books[i];
-                                return true;
-                            }
-                        }
-
-                        Message();
-                        break;
-
-                    default:
-                        Console.WriteLine("Такой команды нету. Повторите попытку");
-                        break;
-                }
-
-                book = null;
-                return false;
             }
 
             private string CheckInputText()
@@ -233,7 +183,7 @@ namespace BookStorage
                     }
                 }
 
-                return text;
+                return text.ToString();
             }
 
             private int CheckInputNumber()
@@ -254,9 +204,82 @@ namespace BookStorage
                 }
             }
 
-            private void Message()
+            public void Search()
             {
-                Console.WriteLine("Такой книги нету");
+                const string CommandSearchAuthor = "1";
+                const string CommandSearchYearRelease = "2";
+
+                Console.WriteLine($"{CommandSearchAuthor} Поиск по автору {CommandSearchYearRelease} поиск по году выпуска");
+
+                switch (Console.ReadLine())
+                {
+                    case CommandSearchAuthor:
+                        SearchAuthor();
+                        break;
+
+                    case CommandSearchYearRelease:
+                        SearchYearRelease();
+                        break;
+                }
+            }
+
+            private void SearchYearRelease()
+            {
+                bool isFound = false;
+                Console.WriteLine("\nВведите год выпуска\n");
+                int.TryParse(Console.ReadLine(), out int input);
+
+                foreach (Book book in _books)
+                {
+                    if (book.YearRelease == input)
+                    {
+                        if (isFound == false)
+                        {
+                            Console.WriteLine("\nРезультаты поиска\n");
+                        }
+
+                        ShowBooksAuthor(book);
+
+                        isFound = true;
+                    }
+                }
+
+                if (isFound == false)
+                {
+                    Console.WriteLine("\nКнига от данного автора не найдена\n");
+                }
+            }
+
+            private void SearchAuthor()
+            {
+                bool isFound = false;
+                Console.WriteLine("\nВведите автора\n");
+                string input = Console.ReadLine();
+
+                foreach (Book book in _books)
+                {
+                    if (book.Author == input)
+                    {
+                        if (isFound == false)
+                        {
+                            Console.WriteLine("\nРезультаты поиска\n");
+                        }
+
+                        ShowBooksAuthor(book);
+
+                        isFound = true;
+                    }
+                }
+
+                if (isFound == false)
+                {
+                    Console.WriteLine("\nКнига от данного автора не найдена\n");
+                }
+            }
+
+            private void ShowBooksAuthor(Book booksAuthor)
+            {
+                Console.WriteLine($"Книга: {booksAuthor.TitleBook}. Автор: {booksAuthor.Author}. Год выпуска: {booksAuthor.YearRelease}");
             }
         }
     }
